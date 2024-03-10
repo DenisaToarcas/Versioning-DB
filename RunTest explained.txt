@@ -1,0 +1,68 @@
+DECLARE @TestRunId INT;
+
+->Declares a variable @TestRunId of type INT to store the identifier of the current test run.
+
+INSERT INTO TestRuns (TestId, StartAt) VALUES (@TestId, GETDATE());
+
+->Inserts a new record into the TestRuns table with the given @TestId and the current timestamp as the start time (StartAt).
+
+SELECT @TestRunId = SCOPE_IDENTITY();
+
+->Retrieves the identifier (TestRunId) of the recently inserted record using SCOPE_IDENTITY() function and assigns it to the variable @TestRunId.
+
+INSERT INTO TestRunTables (TestRunId, TableId, StartAt) SELECT @TestRunId, T.TableId, GETDATE() FROM TestTables T WHERE T.TestId = @TestId ORDER BY T.Position;
+
+->Inserts records into the TestRunTables table, capturing the test configuration for tables involved in the test run.
+->Retrieves table configuration from TestTables based on the given @TestId.
+->Records include the test run identifier (@TestRunId), table identifier (TableId), and the start time (StartAt).
+
+DECLARE @TableName NVARCHAR(50);
+
+->Declares a variable @TableName of type NVARCHAR(50) to store the table names involved in the test run.
+
+DECLARE table_cursor CURSOR FOR ...
+
+->Declares a cursor (table_cursor) to iterate through distinct table names involved in the test run, ordered by their position.
+
+OPEN table_cursor;
+
+->Opens the cursor to start fetching records.
+
+FETCH NEXT FROM table_cursor INTO @TableName;
+
+->Fetches the first record into the variable @TableName from the cursor.
+
+WHILE @@FETCH_STATUS = 0 BEGIN ... END
+
+->Initiates a loop that iterates through all the fetched table names.
+
+EXEC('DELETE FROM ' + @TableName);
+
+->Executes a dynamic SQL statement to delete all records from the current table (@TableName).
+
+EXEC('INSERT INTO ' + @TableName + ' SELECT TOP 1 * FROM ' + @TableName);
+
+->Executes a dynamic SQL statement to insert a single record into the current table (@TableName). The SELECT TOP 1 * ensures that only one record is inserted.
+
+FETCH NEXT FROM table_cursor INTO @TableName;
+
+->Fetches the next table name from the cursor.
+
+CLOSE table_cursor; DEALLOCATE table_cursor;
+
+->Closes and deallocates the cursor.
+
+INSERT INTO TestRunViews (TestRunId, ViewId, StartAt) SELECT @TestRunId, V.ViewId, GETDATE() FROM TestViews V WHERE V.TestId = @TestId;
+
+->Inserts records into the TestRunViews table, capturing the test configuration for views involved in the test run.
+->Retrieves view configuration from TestViews based on the given @TestId.
+->Records include the test run identifier (@TestRunId), view identifier (ViewId), and the start time (StartAt).
+
+-- Add your code to execute and evaluate views here
+
+Placeholder comment indicating where you should add code to execute and evaluate views.
+
+UPDATE TestRuns SET EndAt = GETDATE() WHERE TestRunId = @TestRunId;
+
+->Updates the EndAt field of the TestRuns table with the current timestamp, indicating the end time of the test run.
+->This stored procedure is designed to run a test, record the start and end times, and capture performance data for tables and views involved in the test run.

@@ -1,0 +1,36 @@
+Create a procedure that creates: DO NOT
+-a table with a single-column primary key and no foreign keys
+-a table with a single-column primary key and at least one foreign key
+-a table with a multicolumn primary key
+-a view with a SELECT statement operating on one table
+-a view with a SELECT statement that operates on at least 2 different tables and contains at least one JOIN operator
+-a view with a SELECT statement that has a GROUP BY clause, operates on at least 2 different tables and contains at least one JOIN operator
+-------------------------------------------------------
+
+Create a procedure that:
+-inserts the data nedeed into the specified table (random data generator)
+
+-------------------------------------------------------
+Create a procedure that:
+-insert data in the tables (Tables, Views, Tests, TestTables, TestViews, TestRuns)
+-runs a test
+
+
+--the TestRuns, TestRunTables and TestRunViews should be updated in the end
+
+		insert into TestRuns(Description, StartAt, EndAt) values(@TestDescription + ' Test ID: ' + CONVERT(nvarchar,@TestID), @StartAt, @EndAt)
+
+		SELECT @TestRunId = SCOPE_IDENTITY();
+		--Retrieves the identifier (TestRunId) of the recently inserted record using SCOPE_IDENTITY() 
+		--function and assigns it to the variable @TestRunId
+
+		insert into TestRunTables(TestRunID, TableID, StartAt, EndAt)
+		select @TestRunID, TestTables.TableID, @StartAtForTables, @EndAtForTables
+		from TestTables
+		where TestTables.TestID = @TestID
+		order by TestTables.Position
+
+		insert into TestRunViews(TestRunID, ViewID, StartAt, EndAt)
+		select @TestRunID, TestViews.ViewID, @StartAtForViews, @EndAtForViews
+		from TestViews
+		where TestViews.TestID = @TestID
